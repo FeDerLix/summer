@@ -26,7 +26,7 @@ def initialize_game(mode, player_names):
         "history": []            # log of events/descriptions for each action
     }
 
-
+#hello felix
 def apply_action(game_state, action):
     """
     Apply the chosen action for the current player, update game state for that turn,
