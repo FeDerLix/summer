@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Leaderboard – Top Solo Game Scores</h2>
+  {% if leaderboard %}
+    <table class="table table-striped w-50">
+      <thead>
+        <tr><th>Rank</th><th>Name</th><th>Score (Money)</th></tr>
+      </thead>
+      <tbody>
+        {% for entry in leaderboard %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>{{ entry.name }}</td>
+          <td>${{ entry.score }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p><em>No scores yet. Play a solo game to record your score!</em></p>
+  {% endif %}
+  <a href="{{ url_for('index') }}" class="btn btn-secondary">Back</a>
+{% endblock %}
+

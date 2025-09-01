@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Welcome to Startup Tycoon</h1>
+  <p class="lead">Run your startup for 12 months and see if you can become the top tycoon!</p>
+  <div class="d-grid gap-2 d-sm-flex">
+    <a href="{{ url_for('solo') }}" class="btn btn-primary btn-lg">🎮 Solo Mode</a>
+    <a href="{{ url_for('multiplayer') }}" class="btn btn-secondary btn-lg">🤝 Multiplayer Mode</a>
+  </div>
+{% endblock %}
+

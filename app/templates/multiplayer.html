@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Start a Multiplayer Game</h2>
+  <form action="{{ url_for('multiplayer') }}" method="post">
+    <div class="mb-3">
+      <label for="num_players" class="form-label">Number of Players:</label>
+      <select name="num_players" id="num_players" class="form-select w-25">
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+      </select>
+    </div>
+    {% for i in range(1,5) %}
+      <div class="mb-2">
+        <label for="name{{ i }}" class="form-label">Player {{ i }} Name:</label>
+        <input type="text" name="name{{ i }}" id="name{{ i }}" class="form-control" {{ "required" if i <= 2 else "" }}>
+      </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-success mt-2">Start Game</button>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-2">Cancel</a>
+  </form>
+{% endblock %}
+
