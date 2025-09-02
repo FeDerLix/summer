@@ -1,65 +1,103 @@
 {% extends "base.html" %}
 {% block content %}
   {% set players = game['players'] %}
-  <h2>Month {{ game['month'] }} {% if game['month'] <= 12 %}/ 12{% endif %}</h2>
-  
-  {% if game['mode'] == 'multi' and game['month'] <= 12 %}
-    <h4>Current Turn: {{ players[game['current_player']]['name'] }}</h4>
-  {% elif game['mode'] == 'solo' and game['month'] <= 12 %}
-    <h4>Current Turn: {{ players[0]['name'] }}</h4>
-  {% endif %}
-  
-  <!-- Table of all player stats -->
-  <table class="table table-sm table-bordered align-middle my-3">
-    <thead class="table-light">
-      <tr>
-        <th>Player</th><th>Money</th><th>Customers</th><th>Employees</th><th>Product Quality</th><th>Reputation</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for p in players %}
-      <tr>
-        <td>{{ p.name }}</td>
-        <td>${{ p.money }}</td>
-        <td>{{ p.customers }}</td>
-        <td>{{ p.employees }}</td>
-        <td>{{ p.product }}</td>
-        <td>{{ p.reputation }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  
+
+  <style>
+    /* subtle glow for the active player's card (multiplayer only) */
+    .turn-highlight {
+      border-width: 3px !important;
+      box-shadow: 0 0 0.75rem rgba(13, 110, 253, 0.45);
+    }
+  </style>
+
+  <!-- Simple header -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+    <h2 class="m-0">Month {{ game['month'] }} {% if game['month'] <= 12 %}/ 12{% endif %}</h2>
+    {# No "Current turn" text; we highlight the card instead #}
+  </div>
+
+  <!-- Player summary cards (centered). Highlight current player in multiplayer during the game -->
+  <div class="row g-3 justify-content-center my-3">
+    {% for p in players %}
+      {% set is_current = game['mode'] == 'multi' and game['month'] <= 12 and loop.index0 == game['current_player'] %}
+      <div class="col-12 col-sm-8 col-md-6 col-lg-4 col-xl-3 d-flex">
+        <div class="card h-100 shadow-sm w-100 {% if is_current %}border border-3 border-primary turn-highlight{% endif %}">
+          <div class="card-body">
+            <h5 class="card-title d-flex align-items-center justify-content-between">
+              <span>{{ p.name }}</span>
+              <span class="badge text-bg-secondary">Rep {{ p.reputation }}</span>
+            </h5>
+
+            {% if is_current %}
+              <div class="mb-2">
+                <span class="badge text-bg-primary">Your turn</span>
+                <span class="visually-hidden">It's {{ p.name }}'s turn.</span>
+              </div>
+            {% else %}
+              <div class="small text-muted mb-2">Quick stats</div>
+            {% endif %}
+
+            <ul class="list-unstyled mb-0">
+              <li>💰 <strong>${{ p.money }}</strong></li>
+              <li>👥 {{ p.customers }} customers</li>
+              <li>👤 {{ p.employees }} employees</li>
+              <li>🛠️ Product {{ p.product }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
   {% if game['month'] <= 12 %}
-    <!-- Action choice form -->
+    <!-- Action buttons -->
     <form action="{{ url_for('game') }}" method="post" class="mb-4">
       <div class="mb-2"><strong>Choose an action:</strong></div>
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="action" id="act1" value="marketing" required>
-        <label class="form-check-label" for="act1">📢 Marketing (spend money to gain customers)</label>
+      <div class="row g-2">
+        <div class="col-12 col-md-6">
+          <button type="submit" name="action" value="marketing" class="btn btn-outline-primary w-100">
+            📢 Marketing <small class="text-muted d-block">Spend money to gain customers</small>
+          </button>
+        </div>
+        <div class="col-12 col-md-6">
+          <button type="submit" name="action" value="product" class="btn btn-outline-secondary w-100">
+            🛠️ Product Development <small class="text-muted d-block">Improve product quality</small>
+          </button>
+        </div>
+        <div class="col-12 col-md-6">
+          <button type="submit" name="action" value="hiring" class="btn btn-outline-success w-100">
+            🤝 Hiring <small class="text-muted d-block">Increase employees (raises costs)</small>
+          </button>
+        </div>
+        <div class="col-12 col-md-6">
+          <button type="submit" name="action" value="nothing" class="btn btn-outline-dark w-100">
+            🌀 Do Nothing <small class="text-muted d-block">No new investment</small>
+          </button>
+        </div>
       </div>
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="action" id="act2" value="product" required>
-        <label class="form-check-label" for="act2">🛠️ Product Development (improve product quality)</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="action" id="act3" value="hiring" required>
-        <label class="form-check-label" for="act3">🤝 Hiring (increase employees, raises costs)</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="action" id="act4" value="nothing" required>
-        <label class="form-check-label" for="act4">🌀 Do Nothing (no new investment)</label>
-      </div>
-      <button type="submit" class="btn btn-primary mt-2">Confirm Action</button>
     </form>
   {% endif %}
-  
-  <!-- Event history log -->
-  <h5>History:</h5>
-  <ul class="list-unstyled">
-    {% for entry in game['history'] %}
-      <li>{{ entry|safe }}</li>
-    {% endfor %}
-  </ul>
-{% endblock %}
 
+  {% if game['mode'] == 'multi' %}
+    <!-- Multiplayer: show only the current round's actions (up to N players) -->
+    <h5>This round</h5>
+    <ul class="list-unstyled mt-2">
+      {% set round_entries = game.get('round_history', []) %}
+      {% if round_entries %}
+        {% for entry in round_entries %}
+          <li>{{ entry|safe }}</li>
+        {% endfor %}
+      {% else %}
+        <li class="text-muted fst-italic">No actions yet this round.</li>
+      {% endif %}
+    </ul>
+  {% else %}
+    <!-- Solo: full running history -->
+    <h5>History</h5>
+    <ul class="list-unstyled">
+      {% for entry in game['history'] %}
+        <li>{{ entry|safe }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+  <style>
+    .row-card { transition: transform .05s ease-in-out, box-shadow .1s ease-in-out; }
+    .row-card:hover { transform: translateY(-1px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.08); }
+    .accent-winner { border-left: .5rem solid #0d6efd !important; } /* blue highlight for winner */
+    .money { font-weight: 700; font-size: 1.25rem; white-space: nowrap; }
+    .head-row { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: .5rem; }
+  </style>
+
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <h2 class="m-0">Game Over</h2>
+  </div>
+
+  {% if mode == 'multi' %}
+    <div class="alert alert-primary mt-3" role="alert">
+      🏆 <strong>Winner:</strong> {{ winner_name }} with <strong>${{ winner_money }}</strong>!
+    </div>
+  {% else %}
+    <div class="alert alert-success mt-3" role="alert">
+      ✅ Your final company value: <strong>${{ players[0].money }}</strong>
+    </div>
+  {% endif %}
+
+  <hr class="my-3">
+
+  {# Sort players by money (desc) for a clean summary #}
+  {% set sorted_players = players | sort(attribute='money', reverse=True) %}
+
+  <!-- Header row (table-like on md+ screens) -->
+  <div class="head-row px-3 py-2 mb-2 d-none d-md-block">
+    <div class="row small fw-semibold text-muted">
+      <div class="col-md-1">Rank</div>
+      <div class="col-md-3">Player</div>
+      <div class="col-md-2 text-md-center">Money</div>
+      <div class="col-md-2 text-md-center">Customers</div>
+      <div class="col-md-2 text-md-center">Employees</div>
+      <div class="col-md-1 text-md-center">Product</div>
+      <div class="col-md-1 text-md-center">Reputation</div>
+    </div>
+  </div>
+
+  <!-- Player rows -->
+  <div class="d-flex flex-column gap-2">
+    {% for p in sorted_players %}
+      {% set rank = loop.index %}
+      {% set is_winner = (mode == 'multi' and p.name == winner_name) or (mode == 'solo' and rank == 1) %}
+      <div class="row-card border rounded px-3 py-2 {% if is_winner %}accent-winner{% endif %}">
+        <div class="row align-items-center gy-2">
+          <!-- Rank -->
+          <div class="col-12 col-md-1 d-flex align-items-center">
+            <span class="badge text-bg-secondary me-2 d-md-none">Rank</span>
+            <span class="fw-semibold">#{{ rank }}</span>
+          </div>
+
+          <!-- Player name (and winner badge on mobile) -->
+          <div class="col-12 col-md-3">
+            <div class="d-flex align-items-center gap-2">
+              <div class="fw-semibold">{{ p.name }}</div>
+              {% if is_winner %}
+                <span class="badge text-bg-primary d-md-none">Winner</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Money -->
+          <div class="col-6 col-md-2 text-md-center">
+            <span class="badge text-bg-secondary me-2 d-md-none">Money</span>
+            <span class="money">💰 ${{ p.money }}</span>
+          </div>
+
+          <!-- Customers -->
+          <div class="col-6 col-md-2 text-md-center">
+            <span class="badge text-bg-secondary me-2 d-md-none">Customers</span>
+            <span>👥 {{ p.customers }}</span>
+          </div>
+
+          <!-- Employees -->
+          <div class="col-6 col-md-2 text-md-center">
+            <span class="badge text-bg-secondary me-2 d-md-none">Employees</span>
+            <span>👤 {{ p.employees }}</span>
+          </div>
+
+          <!-- Product -->
+          <div class="col-6 col-md-1 text-md-center">
+            <span class="badge text-bg-secondary me-2 d-md-none">Product</span>
+            <span>🛠️ {{ p.product }}</span>
+          </div>
+
+          <!-- Reputation -->
+          <div class="col-6 col-md-1 text-md-center">
+            <span class="badge text-bg-secondary me-2 d-md-none">Reputation</span>
+            <span>⭐ {{ p.reputation }}</span>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <div class="d-flex justify-content-center gap-2 mt-4">
+    {% if mode == 'solo' %}
+      <a href="{{ url_for('solo') }}" class="btn btn-success">Play Again (Solo)</a>
+    {% else %}
+      <a href="{{ url_for('multiplayer') }}" class="btn btn-success">Play Again (Multiplayer)</a>
+    {% endif %}
+    <a href="{{ url_for('leaderboard_solo') }}" class="btn btn-outline-primary">View Leaderboards</a>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Main Menu</a>
+  </div>
+{% endblock %}

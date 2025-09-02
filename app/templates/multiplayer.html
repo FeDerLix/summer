@@ -1,23 +1,64 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Start a Multiplayer Game</h2>
-  <form action="{{ url_for('multiplayer') }}" method="post">
-    <div class="mb-3">
-      <label for="num_players" class="form-label">Number of Players:</label>
-      <select name="num_players" id="num_players" class="form-select w-25">
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-      </select>
-    </div>
-    {% for i in range(1,5) %}
-      <div class="mb-2">
-        <label for="name{{ i }}" class="form-label">Player {{ i }} Name:</label>
-        <input type="text" name="name{{ i }}" id="name{{ i }}" class="form-control" {{ "required" if i <= 2 else "" }}>
-      </div>
-    {% endfor %}
-    <button type="submit" class="btn btn-success mt-2">Start Game</button>
-    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-2">Cancel</a>
-  </form>
-{% endblock %}
+  <div class="d-flex align-items-center justify-content-center" style="min-height: 60vh;">
+    <div class="card shadow-sm w-100" style="max-width: 640px;">
+      <div class="card-body p-4">
+        <h2 class="card-title text-center mb-3">Start a Multiplayer Game</h2>
+        <p class="text-muted text-center mb-4">Choose how many players and enter their names.</p>
 
+        <form action="{{ url_for('multiplayer') }}" method="post">
+          <div class="mb-3 text-center">
+            <label for="num_players" class="form-label me-2">Number of Players:</label>
+            <select name="num_players" id="num_players" class="form-select d-inline-block" style="width: 120px;">
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+
+          <div class="row g-3">
+            {% for i in range(1,5) %}
+              <div class="col-12 col-md-6 player-field" data-index="{{ i }}">
+                <label for="name{{ i }}" class="form-label">Player {{ i }} Name</label>
+                <input type="text" name="name{{ i }}" id="name{{ i }}" class="form-control" placeholder="e.g., Player {{ i }}">
+              </div>
+            {% endfor %}
+          </div>
+
+          <div class="d-grid gap-2 d-sm-flex justify-content-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg px-4">Start Game</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary btn-lg px-4">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function updatePlayerFields() {
+      const select = document.getElementById('num_players');
+      const n = parseInt(select.value, 10);
+      const fields = document.querySelectorAll('.player-field');
+
+      fields.forEach((wrap) => {
+        const idx = parseInt(wrap.dataset.index, 10);
+        const input = wrap.querySelector('input');
+
+        if (idx <= n) {
+          wrap.style.display = '';
+          input.required = true;
+        } else {
+          wrap.style.display = 'none';
+          input.required = false;
+          input.value = '';
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const select = document.getElementById('num_players');
+      select.addEventListener('change', updatePlayerFields);
+      updatePlayerFields(); // initialize based on default selection
+    });
+  </script>
+{% endblock %}
